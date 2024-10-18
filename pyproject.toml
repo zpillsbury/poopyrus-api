@@ -1,7 +1,7 @@
 [project]
 name = "poopyrus-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "We don't take shit.. we track it."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
