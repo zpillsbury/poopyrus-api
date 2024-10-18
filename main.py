@@ -56,19 +56,19 @@ class LogSuccessResult(BaseModel):
 
 
 @app.get("/logs", tags=["logs"], response_model=list[Log])
-async def get_logs():
+async def get_logs() -> list[Log]:
     """
     Get potty logs for dogs.
     """
     results = []
     async for doc in db.logs.find():
         results.append(
-            {
-                "id": str(doc.get("_id")),
-                "name": doc.get("name"),
-                "type": doc.get("type"),
-                "date": doc.get("date").isoformat(),
-            }
+            Log(
+                id=str(doc.get("_id")),
+                name=doc.get("name"),
+                type=doc.get("type"),
+                date=doc.get("date").isoformat(),
+            )
         )
 
     return results
@@ -89,7 +89,7 @@ async def get_logs():
         },
     },
 )
-async def get_log(log_id: str):
+async def get_log(log_id: str) -> Log:
     """
     Get a potty log for a dog.
     """
@@ -106,12 +106,12 @@ async def get_log(log_id: str):
             status_code=status.HTTP_404_NOT_FOUND, detail="Log not found."
         )
 
-    return {
-        "id": str(doc.get("_id")),
-        "name": doc.get("name"),
-        "type": doc.get("type"),
-        "date": doc.get("date").isoformat(),
-    }
+    return Log(
+        id=str(doc.get("_id")),
+        name=doc.get("name"),
+        type=doc.get("type"),
+        date=doc.get("date").isoformat(),
+    )
 
 
 @app.post(
@@ -119,14 +119,14 @@ async def get_log(log_id: str):
     tags=["logs"],
     response_model=LogCreatResult,
 )
-async def add_log(new_log: LogCreate):
+async def add_log(new_log: LogCreate) -> LogCreatResult:
     """
     Add a potty log for a dog.
     """
     data = new_log.model_dump()
     create_result = await db.logs.insert_one(data)
 
-    return {"id": str(create_result.inserted_id)}
+    return LogCreatResult(id=str(create_result.inserted_id))
 
 
 @app.delete(
@@ -144,7 +144,7 @@ async def add_log(new_log: LogCreate):
         },
     },
 )
-async def delete_log(log_id: str):
+async def delete_log(log_id: str) -> LogSuccessResult:
     """
     Delete a potty log for a dog.
     """
@@ -162,7 +162,7 @@ async def delete_log(log_id: str):
             detail="Failed to delete log.",
         )
 
-    return {"success": True}
+    return LogSuccessResult(success=True)
 
 
 @app.patch(
@@ -180,7 +180,7 @@ async def delete_log(log_id: str):
         },
     },
 )
-async def update_log(log_id: str, log_update: LogUpdate):
+async def update_log(log_id: str, log_update: LogUpdate) -> LogSuccessResult:
     """
     Update a potty log for a dog.
     """
@@ -207,4 +207,4 @@ async def update_log(log_id: str, log_update: LogUpdate):
             detail="No changes provided",
         )
 
-    return {"success": True}
+    return LogSuccessResult(success=True)
