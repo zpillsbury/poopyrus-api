@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: poopyrus-api
+    name: poopyrus-api
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: poopyrus-api
+    template:
+        metadata:
+            labels:
+                app: poopyrus-api
+        spec:
+            containers:
+                - name: poopyrus-api
+                  image: us-east1-docker.pkg.dev/homy-408915/poopyrus/poopyrus-api:1.0.0
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                      - containerPort: 8080
+                        protocol: TCP
+                  envFrom:
+                      - secretRef:
+                            name: poopyrus-api-secret
+
+                  resources:
+                      limits:
+                          cpu: 300m
+                          memory: 256Mi
+                      requests:
+                          cpu: 100m
+                          memory: 128Mi
