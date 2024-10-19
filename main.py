@@ -1,16 +1,23 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 import bson
 from bson import ObjectId
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+security = HTTPBearer()
+
 
 class Settings(BaseSettings):
     mongo_uri: str
+    static_token: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -59,11 +66,28 @@ class LogSuccessResult(BaseModel):
     success: bool
 
 
-@app.get("/logs", tags=["logs"], response_model=list[Log])
-async def get_logs() -> list[Log]:
+@app.get(
+    "/logs",
+    tags=["logs"],
+    response_model=list[Log],
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "model": GenericException,
+        }
+    },
+)
+async def get_logs(
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)]
+) -> list[Log]:
     """
     Get potty logs for dogs.
     """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
     results = []
     async for doc in db.logs.find():
         results.append(
@@ -87,16 +111,28 @@ async def get_logs() -> list[Log]:
             "description": "Invalid log id format.",
             "model": GenericException,
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "model": GenericException,
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Log not found.",
             "model": GenericException,
         },
     },
 )
-async def get_log(log_id: str) -> Log:
+async def get_log(
+    log_id: str,
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> Log:
     """
     Get a potty log for a dog.
     """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
     try:
         log_object_id = ObjectId(log_id)
     except bson.errors.InvalidId:
@@ -122,11 +158,25 @@ async def get_log(log_id: str) -> Log:
     "/logs",
     tags=["logs"],
     response_model=LogCreatResult,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "model": GenericException,
+        }
+    },
 )
-async def add_log(new_log: LogCreate) -> LogCreatResult:
+async def add_log(
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    new_log: LogCreate,
+) -> LogCreatResult:
     """
     Add a potty log for a dog.
     """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
     data = new_log.model_dump()
     create_result = await db.logs.insert_one(data)
 
@@ -142,16 +192,28 @@ async def add_log(new_log: LogCreate) -> LogCreatResult:
             "description": "Invalid log id format.",
             "model": GenericException,
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "model": GenericException,
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Failed to delete log",
             "model": GenericException,
         },
     },
 )
-async def delete_log(log_id: str) -> LogSuccessResult:
+async def delete_log(
+    log_id: str,
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> LogSuccessResult:
     """
     Delete a potty log for a dog.
     """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
     try:
         log_object_id = ObjectId(log_id)
     except bson.errors.InvalidId:
@@ -178,16 +240,29 @@ async def delete_log(log_id: str) -> LogSuccessResult:
             "description": "Invalid log id format, No changes provided",
             "model": GenericException,
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized",
+            "model": GenericException,
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "Log not found.",
             "model": GenericException,
         },
     },
 )
-async def update_log(log_id: str, log_update: LogUpdate) -> LogSuccessResult:
+async def update_log(
+    log_id: str,
+    log_update: LogUpdate,
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> LogSuccessResult:
     """
     Update a potty log for a dog.
     """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
     try:
         log_object_id = ObjectId(log_id)
     except bson.errors.InvalidId:
