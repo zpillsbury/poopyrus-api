@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: poopyrus-ingress
+    annotations:
+        kubernetes.io/ingress.global-static-ip-name: poopyrus-ingress
+        networking.gke.io/managed-certificates: poo.homy.homes
+        networking.gke.io/v1beta1.FrontendConfig: poopyrus-frontend-config
+        kubernetes.io/ingress.class: gce
+spec:
+    defaultBackend:
+        service:
+            name: poopyrus-api-svc
+            port:
+                number: 8080
+    rules:
+        - host: "poo.homy.homes"
+          http:
+              paths:
+                  - path: "/"
+                    pathType: Prefix
+                    backend:
+                        service:
+                            name: poopyrus-api-svc
+                            port:
+                                number: 8080
