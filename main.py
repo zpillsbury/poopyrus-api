@@ -66,6 +66,20 @@ class LogSuccessResult(BaseModel):
     success: bool
 
 
+async def validate_access(
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)]
+) -> None:
+    """
+    Validates access tokens.
+
+    Raises a 401 HTTPException if an invalid token is provided.
+    """
+    if access_token.credentials != settings.static_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+        )
+
+
 @app.get(
     "/logs",
     tags=["logs"],
@@ -78,16 +92,12 @@ class LogSuccessResult(BaseModel):
     },
 )
 async def get_logs(
-    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)]
+    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    token_check: Annotated[None, Depends(validate_access)],
 ) -> list[Log]:
     """
     Get potty logs for dogs.
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
-
     results = []
     async for doc in db.logs.find():
         results.append(
@@ -124,15 +134,11 @@ async def get_logs(
 async def get_log(
     log_id: str,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    token_check: Annotated[None, Depends(validate_access)],
 ) -> Log:
     """
     Get a potty log for a dog.
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
-
     try:
         log_object_id = ObjectId(log_id)
     except bson.errors.InvalidId:
@@ -167,15 +173,12 @@ async def get_log(
 )
 async def add_log(
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    token_check: Annotated[None, Depends(validate_access)],
     new_log: LogCreate,
 ) -> LogCreatResult:
     """
     Add a potty log for a dog.
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
 
     data = new_log.model_dump()
     create_result = await db.logs.insert_one(data)
@@ -205,14 +208,11 @@ async def add_log(
 async def delete_log(
     log_id: str,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    token_check: Annotated[None, Depends(validate_access)],
 ) -> LogSuccessResult:
     """
     Delete a potty log for a dog.
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
 
     try:
         log_object_id = ObjectId(log_id)
@@ -254,14 +254,11 @@ async def update_log(
     log_id: str,
     log_update: LogUpdate,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    token_check: Annotated[None, Depends(validate_access)],
 ) -> LogSuccessResult:
     """
     Update a potty log for a dog.
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
-        )
 
     try:
         log_object_id = ObjectId(log_id)
