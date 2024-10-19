@@ -1,17 +1,21 @@
-import os
 from datetime import datetime
 from typing import Any, Optional
 
 import bson
 from bson import ObjectId
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI")
+class Settings(BaseSettings):
+    mongo_uri: str
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+settings = Settings()
 
 app = FastAPI(
     title="💩 Poopyrus",
@@ -20,7 +24,7 @@ app = FastAPI(
     docs_url="/",
 )
 db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
-    MONGO_URI, tlsAllowInvalidCertificates=True
+    settings.mongo_uri, tlsAllowInvalidCertificates=True
 )["poopyrus"]
 
 
