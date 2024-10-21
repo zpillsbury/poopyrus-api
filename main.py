@@ -60,6 +60,7 @@ class Log(BaseModel):
     name: str
     type: str
     date: str
+    note: Optional[str] = None
 
 
 class LogCreate(BaseModel):
@@ -72,6 +73,7 @@ class LogUpdate(BaseModel):
     name: Optional[str] = None
     type: Optional[str] = None
     date: Optional[datetime] = None
+    note: Optional[str] = None
 
 
 class LogCreatResult(BaseModel):
