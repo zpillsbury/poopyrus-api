@@ -4,6 +4,7 @@ from typing import Annotated, Any, Optional
 import bson
 from bson import ObjectId
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -33,6 +34,21 @@ app = FastAPI(
 db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
     settings.mongo_uri, tlsAllowInvalidCertificates=True
 )["poopyrus"]
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://poo.homy.homes",
+        "https://zpillsbury.github.io/poopyrus",
+    ],
+)
 
 
 class GenericException(BaseModel):
