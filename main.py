@@ -124,6 +124,7 @@ async def get_logs(
                 name=doc.get("name"),
                 type=doc.get("type"),
                 date=doc.get("date").isoformat(),
+                note=doc.get("note"),
             )
         )
 
@@ -175,6 +176,7 @@ async def get_log(
         name=doc.get("name"),
         type=doc.get("type"),
         date=doc.get("date").isoformat(),
+        note=doc.get("note"),
     )
 
 
