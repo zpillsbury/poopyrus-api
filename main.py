@@ -35,8 +35,6 @@ db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
     settings.mongo_uri, tlsAllowInvalidCertificates=True
 )["poopyrus"]
 
-from fastapi.middleware.cors import CORSMiddleware
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
