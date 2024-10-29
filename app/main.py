@@ -122,7 +122,7 @@ async def login(
     },
 )
 async def get_logs(
-    credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)],
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     user_id: Annotated[None | str, Depends(validate_access)],
 ) -> list[Log]:
     """
