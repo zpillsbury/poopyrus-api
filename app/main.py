@@ -1,10 +1,7 @@
-import logging
-import sys
 import time
 from typing import Annotated, Any, Callable, TypeVar
 
 import bson
-import firebase_admin
 import httpx
 from bson import ObjectId
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -15,8 +12,6 @@ from fastapi.security import (
     HTTPBasicCredentials,
     HTTPBearer,
 )
-from firebase_admin import credentials
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from .auth import validate_access
 from .models import (
@@ -29,18 +24,11 @@ from .models import (
     LogUpdate,
 )
 from .settings import settings
+from .utilities.clients import db
+from .utilities.log import logger
 
 security = HTTPBearer()
 F = TypeVar("F", bound=Callable[..., Any])
-
-
-logging.basicConfig(
-    stream=sys.stdout,
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",  # noqa: E501
-    datefmt="%d/%b/%Y %H:%M:%S",
-)
-logger = logging.getLogger("poopyrus")
 
 
 app = FastAPI(
@@ -49,9 +37,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/",
 )
-db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
-    settings.mongo_uri, tlsAllowInvalidCertificates=True
-)["poopyrus"]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,18 +50,6 @@ app.add_middleware(
         "https://poo.homy.homes",
         "https://zpillsbury.github.io/poopyrus",
     ],
-)
-
-firebase_admin.initialize_app(
-    credentials.Certificate(
-        {
-            "type": "service_account",
-            "project_id": settings.google_project,
-            "private_key": settings.google_auth_pk,
-            "client_email": settings.google_auth_client_email,
-            "token_uri": settings.google_auth_token_uri,
-        }
-    )
 )
 
 
