@@ -40,7 +40,6 @@ db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
     settings.mongo_uri, tlsAllowInvalidCertificates=True
 )["poopyrus"]
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
