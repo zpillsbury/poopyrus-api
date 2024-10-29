@@ -12,12 +12,10 @@ from fastapi.security import (
     HTTPBasicCredentials,
 )
 
+from app.models import GenericException
 from app.settings import settings
 
-from .models import (
-    GenericException,
-    LoginResult,
-)
+from .models import LoginResult
 
 router = APIRouter(
     prefix="/v1/auth",

@@ -14,10 +14,10 @@ from fastapi.security import (
 )
 
 from app.auth import validate_access
+from app.models import GenericException
 from app.utilities.clients import db
 
 from .models import (
-    GenericException,
     Log,
     LogCreate,
     LogCreatResult,
@@ -29,7 +29,6 @@ router = APIRouter(
     prefix="/v1/logs",
     tags=["logs"],
 )
-
 
 security = HTTPBearer()
 

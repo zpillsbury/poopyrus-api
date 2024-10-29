@@ -4,10 +4,6 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class GenericException(BaseModel):
-    detail: str
-
-
 class Log(BaseModel):
     id: str
     user_id: str
