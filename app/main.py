@@ -133,6 +133,7 @@ async def get_logs(
         results.append(
             Log(
                 id=str(doc.get("_id")),
+                user_id=doc.get("user_id"),
                 name=doc.get("name"),
                 type=doc.get("type"),
                 date=doc.get("date").isoformat(),
@@ -185,6 +186,7 @@ async def get_log(
 
     return Log(
         id=str(doc.get("_id")),
+        user_id=doc.get("user_id"),
         name=doc.get("name"),
         type=doc.get("type"),
         date=doc.get("date").isoformat(),
@@ -212,7 +214,7 @@ async def add_log(
     Add a potty log for a dog.
     """
 
-    data = new_log.model_dump()
+    data = new_log.model_dump() | {"user_id": user_id}
     create_result = await db.logs.insert_one(data)
 
     return LogCreatResult(id=str(create_result.inserted_id))
@@ -253,8 +255,8 @@ async def delete_log(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid log id format."
         )
 
-    delete_result = await db.logs.delete_one({"_id": log_object_id})
-    if not delete_result.acknowledged:
+    delete_result = await db.logs.delete_one({"_id": log_object_id, "user_id": user_id})
+    if delete_result.deleted_count == 0:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete log.",
@@ -301,7 +303,7 @@ async def update_log(
 
     update_data = log_update.model_dump(exclude_unset=True)
     update_result = await db.logs.update_one(
-        {"_id": log_object_id}, {"$set": update_data}
+        {"_id": log_object_id, "user_id": user_id}, {"$set": update_data}
     )
 
     if update_result.matched_count == 0:

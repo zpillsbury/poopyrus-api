@@ -10,6 +10,7 @@ class GenericException(BaseModel):
 
 class Log(BaseModel):
     id: str
+    user_id: str
     name: str
     type: str
     date: str
