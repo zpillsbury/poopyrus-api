@@ -1,10 +1,13 @@
-from typing import Annotated, Any
+import logging
+import sys
+import time
+from typing import Annotated, Any, Callable, TypeVar
 
 import bson
 import firebase_admin
 import httpx
 from bson import ObjectId
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import (
     HTTPAuthorizationCredentials,
@@ -28,6 +31,16 @@ from .models import (
 from .settings import settings
 
 security = HTTPBearer()
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",  # noqa: E501
+    datefmt="%d/%b/%Y %H:%M:%S",
+)
+logger = logging.getLogger("poopyrus")
 
 
 app = FastAPI(
@@ -64,6 +77,27 @@ firebase_admin.initialize_app(
         }
     )
 )
+
+
+@app.middleware("http")
+async def process_time_log_middleware(request: Request, call_next: F) -> Response:
+    """
+    Add API process time in response headers and log calls
+    """
+    start_time = time.time()
+    response: Response = await call_next(request)
+    process_time = str(round(time.time() - start_time, 3))
+    response.headers["X-Process-Time"] = process_time
+
+    logger.info(
+        "Method=%s Path=%s StatusCode=%s ProcessTime=%s",
+        request.method,
+        request.url.path,
+        response.status_code,
+        process_time,
+    )
+
+    return response
 
 
 security = HTTPBearer()
