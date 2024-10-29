@@ -9,6 +9,7 @@ from fastapi.security import (
 
 from app.routers.auth import auth
 from app.routers.logs import logs
+from app.routers.pets import pets
 
 from .utilities.log import logger
 
@@ -61,3 +62,4 @@ async def process_time_log_middleware(request: Request, call_next: F) -> Respons
 
 app.include_router(auth.router)
 app.include_router(logs.router)
+app.include_router(pets.router)

@@ -4,31 +4,28 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class Log(BaseModel):
+class Pet(BaseModel):
     id: str
     user_id: str
     name: str
     type: str
-    date: str
-    note: Optional[str] = None
+    created_at: datetime
+    update_at: Optional[datetime] = None
 
 
-class LogCreate(BaseModel):
+class PetCreate(BaseModel):
     name: str
     type: str
-    date: datetime
 
 
-class LogUpdate(BaseModel):
+class PetUpdate(BaseModel):
     name: Optional[str] = None
     type: Optional[str] = None
-    date: Optional[datetime] = None
-    note: Optional[str] = None
 
 
-class LogCreatResult(BaseModel):
+class PetCreatResult(BaseModel):
     id: str
 
 
-class LogSuccessResult(BaseModel):
+class PetSuccessResult(BaseModel):
     success: bool
