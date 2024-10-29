@@ -28,14 +28,6 @@ from .models import (
 router = APIRouter(
     prefix="/v1/logs",
     tags=["logs"],
-)
-
-security = HTTPBearer()
-
-
-@router.get(
-    "",
-    response_model=list[Log],
     responses={
         status.HTTP_401_UNAUTHORIZED: {
             "description": "Unauthorized",
@@ -43,6 +35,11 @@ security = HTTPBearer()
         }
     },
 )
+
+security = HTTPBearer()
+
+
+@router.get("", response_model=list[Log])
 async def get_logs(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     user_id: Annotated[None | str, Depends(validate_access)],
@@ -72,10 +69,6 @@ async def get_logs(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "description": "Invalid log id format.",
-            "model": GenericException,
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized",
             "model": GenericException,
         },
         status.HTTP_404_NOT_FOUND: {
@@ -118,12 +111,6 @@ async def get_log(
 @router.post(
     "",
     response_model=LogCreatResult,
-    responses={
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized",
-            "model": GenericException,
-        }
-    },
 )
 async def add_log(
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
@@ -146,10 +133,6 @@ async def add_log(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "description": "Invalid log id format.",
-            "model": GenericException,
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized",
             "model": GenericException,
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
@@ -190,10 +173,6 @@ async def delete_log(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "description": "Invalid log id format, No changes provided",
-            "model": GenericException,
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "Unauthorized",
             "model": GenericException,
         },
         status.HTTP_404_NOT_FOUND: {
