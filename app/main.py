@@ -1,29 +1,34 @@
-from datetime import datetime
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 import bson
+import firebase_admin
+import httpx
 from bson import ObjectId
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import (
     HTTPAuthorizationCredentials,
+    HTTPBasic,
+    HTTPBasicCredentials,
     HTTPBearer,
 )
+from firebase_admin import credentials
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from .auth import validate_access
+from .models import (
+    GenericException,
+    Log,
+    LogCreate,
+    LogCreatResult,
+    LoginResult,
+    LogSuccessResult,
+    LogUpdate,
+)
+from .settings import settings
 
 security = HTTPBearer()
 
-
-class Settings(BaseSettings):
-    mongo_uri: str
-    static_token: str
-
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-
-settings = Settings()
 
 app = FastAPI(
     title="💩 Poopyrus",
@@ -35,7 +40,6 @@ db: AsyncIOMotorDatabase[Any] = AsyncIOMotorClient(
     settings.mongo_uri, tlsAllowInvalidCertificates=True
 )["poopyrus"]
 
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,52 +54,61 @@ app.add_middleware(
     ],
 )
 
-
-class GenericException(BaseModel):
-    detail: str
-
-
-class Log(BaseModel):
-    id: str
-    name: str
-    type: str
-    date: str
-    note: Optional[str] = None
-
-
-class LogCreate(BaseModel):
-    name: str
-    type: str
-    date: datetime
+firebase_admin.initialize_app(
+    credentials.Certificate(
+        {
+            "type": "service_account",
+            "project_id": settings.google_project,
+            "private_key": settings.google_auth_pk,
+            "client_email": settings.google_auth_client_email,
+            "token_uri": settings.google_auth_token_uri,
+        }
+    )
+)
 
 
-class LogUpdate(BaseModel):
-    name: Optional[str] = None
-    type: Optional[str] = None
-    date: Optional[datetime] = None
-    note: Optional[str] = None
+security = HTTPBearer()
+basic_security = HTTPBasic()
 
 
-class LogCreatResult(BaseModel):
-    id: str
-
-
-class LogSuccessResult(BaseModel):
-    success: bool
-
-
-async def validate_access(
-    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)]
-) -> None:
+@app.get(
+    "/login",
+    response_model=LoginResult,
+    responses={
+        401: {"description": "Unauthorized", "model": GenericException},
+    },
+)
+async def login(
+    credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)],
+) -> LoginResult:
     """
-    Validates access tokens.
-
-    Raises a 401 HTTPException if an invalid token is provided.
+    Email Login
     """
-    if access_token.credentials != settings.static_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            settings.google_auth_sign_in_url,
+            params={"key": settings.google_auth_sign_in_key},
+            json={
+                "email": credentials.username,
+                "password": credentials.password,
+                "returnSecureToken": True,
+            },
         )
+
+        if r.is_success:
+            data = r.json()
+            access_token: str | None = data.get("idToken")
+            expires_in: str | None = data.get("expiresIn")
+
+            if access_token and expires_in:
+                return LoginResult(
+                    access_token=access_token, expires_in=int(expires_in)
+                )
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unauthorized",
+    )
 
 
 @app.get(
@@ -110,8 +123,8 @@ async def validate_access(
     },
 )
 async def get_logs(
-    access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    token_check: Annotated[None, Depends(validate_access)],
+    credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)],
+    user_id: Annotated[None | str, Depends(validate_access)],
 ) -> list[Log]:
     """
     Get potty logs for dogs.
@@ -153,7 +166,7 @@ async def get_logs(
 async def get_log(
     log_id: str,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    token_check: Annotated[None, Depends(validate_access)],
+    user_id: Annotated[None | str, Depends(validate_access)],
 ) -> Log:
     """
     Get a potty log for a dog.
@@ -193,7 +206,7 @@ async def get_log(
 )
 async def add_log(
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    token_check: Annotated[None, Depends(validate_access)],
+    user_id: Annotated[None | str, Depends(validate_access)],
     new_log: LogCreate,
 ) -> LogCreatResult:
     """
@@ -228,7 +241,7 @@ async def add_log(
 async def delete_log(
     log_id: str,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    token_check: Annotated[None, Depends(validate_access)],
+    user_id: Annotated[None | str, Depends(validate_access)],
 ) -> LogSuccessResult:
     """
     Delete a potty log for a dog.
@@ -274,7 +287,7 @@ async def update_log(
     log_id: str,
     log_update: LogUpdate,
     access_token: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    token_check: Annotated[None, Depends(validate_access)],
+    user_id: Annotated[None | str, Depends(validate_access)],
 ) -> LogSuccessResult:
     """
     Update a potty log for a dog.
