@@ -52,8 +52,8 @@ async def get_pets(
     async for doc in db.pets.find():
 
         updated_at = doc.get("updated_at")
-    if updated_at:
-        updated_at = updated_at.isoformat()
+        if updated_at:
+            updated_at = updated_at.isoformat()
 
         results.append(
             Pet(
@@ -149,7 +149,7 @@ async def add_pet(
             "description": "Invalid pet id format.",
             "model": GenericException,
         },
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        status.HTTP_404_NOT_FOUND: {
             "description": "Failed to delete pet",
             "model": GenericException,
         },
@@ -163,7 +163,6 @@ async def delete_pet(
     """
     Delete a pet.
     """
-
     try:
         pet_object_id = ObjectId(pet_id)
     except bson.errors.InvalidId:
@@ -174,7 +173,7 @@ async def delete_pet(
     delete_result = await db.pets.delete_one({"_id": pet_object_id, "user_id": user_id})
     if delete_result.deleted_count == 0:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Failed to delete pet.",
         )
 
@@ -186,7 +185,7 @@ async def delete_pet(
     response_model=PetSuccessResult,
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Invalid pet id format, No changes provided",
+            "description": "Invalid pet id format",
             "model": GenericException,
         },
         status.HTTP_404_NOT_FOUND: {
@@ -222,12 +221,6 @@ async def update_pet(
     if update_result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Pet not found."
-        )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No changes provided",
         )
 
     return PetSuccessResult(success=True)
