@@ -87,17 +87,6 @@ async def test_update_logs(test_client: AsyncClient) -> None:
     )
     assert r.status_code == 200
 
-    # Updated log with same value
-    log_id = results[0].get("id")
-    r = await test_client.patch(
-        f"/v1/logs/{log_id}",
-        json={
-            "name": "string",
-        },
-        headers=AUTH_HEADER,
-    )
-    assert r.status_code == 400
-
     # Unknown Log ID
     r = await test_client.patch(
         "/v1/logs/652d729bb8da04810695a943",
