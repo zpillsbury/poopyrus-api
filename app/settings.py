@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     mongo_uri: str
     static_token: str
-    google_application_credentials: str
     google_project: str
     google_auth_pk: str
     google_auth_client_email: str
