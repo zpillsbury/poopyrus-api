@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 import bson
@@ -133,7 +134,11 @@ async def add_log(
     Add a potty log for a dog.
     """
 
-    data = new_log.model_dump() | {"user_id": user_id}
+    data = (
+        new_log.model_dump()
+        | {"user_id": user_id}
+        | {"created_at": datetime.now(timezone.utc)}
+    )
     create_result = await db.logs.insert_one(data)
 
     return LogCreatResult(id=str(create_result.inserted_id))
@@ -210,7 +215,9 @@ async def update_log(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid log id format."
         )
 
-    update_data = log_update.model_dump(exclude_unset=True)
+    update_data = log_update.model_dump(exclude_unset=True) | {
+        "updated_at": datetime.now(timezone.utc)
+    }
     update_result = await db.logs.update_one(
         {"_id": log_object_id, "user_id": user_id}, {"$set": update_data}
     )
@@ -218,12 +225,6 @@ async def update_log(
     if update_result.matched_count == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Log not found."
-        )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No changes provided",
         )
 
     return LogSuccessResult(success=True)
