@@ -32,7 +32,6 @@ jobs:
 
   testing:
     runs-on: ubuntu-latest
-    environment: Testing
     steps:
       - name: 🏗 Setup Repo
         uses: actions/checkout@v4
