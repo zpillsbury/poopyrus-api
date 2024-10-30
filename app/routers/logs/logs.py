@@ -49,6 +49,11 @@ async def get_logs(
     """
     results = []
     async for doc in db.logs.find():
+
+        updated_at = doc.get("updated_at")
+        if updated_at:
+            updated_at = updated_at.isoformat()
+
         results.append(
             Log(
                 id=str(doc.get("_id")),
@@ -57,6 +62,8 @@ async def get_logs(
                 type=doc.get("type"),
                 date=doc.get("date").isoformat(),
                 note=doc.get("note"),
+                updated_at=updated_at,
+                created_at=doc.get("created_at").isoformat(),
             )
         )
 
@@ -98,6 +105,9 @@ async def get_log(
             status_code=status.HTTP_404_NOT_FOUND, detail="Log not found."
         )
 
+    updated_at = doc.get("updated_at")
+    if updated_at:
+        updated_at = updated_at.isoformat()
     return Log(
         id=str(doc.get("_id")),
         user_id=doc.get("user_id"),
@@ -105,6 +115,8 @@ async def get_log(
         type=doc.get("type"),
         date=doc.get("date").isoformat(),
         note=doc.get("note"),
+        updated_at=updated_at,
+        created_at=doc.get("created_at").isoformat(),
     )
 
 

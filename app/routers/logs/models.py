@@ -11,6 +11,8 @@ class Log(BaseModel):
     type: str
     date: str
     note: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 class LogCreate(BaseModel):
