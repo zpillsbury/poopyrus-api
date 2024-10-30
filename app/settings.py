@@ -13,6 +13,7 @@ class Settings(BaseSettings):
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword"
     )
     google_auth_sign_in_key: str
+    testing: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

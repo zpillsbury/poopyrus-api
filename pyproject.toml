@@ -14,7 +14,16 @@ dependencies = [
 ]
 
 [tool.uv]
-dev-dependencies = ["black>=24.10.0", "mypy>=1.12.0", "ruff>=0.7.0"]
+dev-dependencies = [
+    "black>=24.10.0",
+    "coverage>=7.6.4",
+    "mongomock-motor>=0.0.34",
+    "mypy>=1.12.0",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-httpx>=0.33.0",
+    "ruff>=0.7.0",
+]
 
 [tool.black]
 line-length = 88

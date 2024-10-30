@@ -1,5 +1,7 @@
 .mypy_cache
 .venv
 .env
+.coverage
 
 secret.yaml
+htmlcov
