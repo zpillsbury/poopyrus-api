@@ -39,6 +39,7 @@ async def login(
     """
     Email Login
     """
+
     async with httpx.AsyncClient() as client:
         r = await client.post(
             settings.google_auth_sign_in_url,
