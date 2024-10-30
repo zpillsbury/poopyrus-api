@@ -5,6 +5,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
 
+from app.settings import settings
+
 security = HTTPBearer()
 
 
@@ -16,14 +18,18 @@ async def validate_access(
 
     Raises a 401 HTTPException if an invalid token is provided.
     """
-    try:
-        user_result = await run_sync(auth.verify_id_token, access_token.credentials)
-        if user_result:
-            user_id: str | None = user_result.get("user_id")
+    if settings.testing:
+        if access_token.credentials == settings.static_token:
+            return "tester"
+    else:
+        try:
+            user_result = await run_sync(auth.verify_id_token, access_token.credentials)
+            if user_result:
+                user_id: str | None = user_result.get("user_id")
 
-            return user_id
+                return user_id
 
-    except Exception as e:
-        print(e)
+        except Exception as e:
+            print(e)
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
