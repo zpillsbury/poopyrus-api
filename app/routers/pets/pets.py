@@ -61,7 +61,7 @@ async def get_pets(
                 user_id=doc.get("user_id"),
                 name=doc.get("name"),
                 type=doc.get("type"),
-                rating=doc.get("rating"),
+                updated_at=updated_at,
                 created_at=doc.get("created_at").isoformat(),
             )
         )
@@ -108,14 +108,14 @@ async def get_pet(
     if updated_at:
         updated_at = updated_at.isoformat()
 
-        return Pet(
-            id=str(doc.get("_id")),
-            user_id=doc.get("user_id"),
-            name=doc.get("name"),
-            type=doc.get("type"),
-            rating=doc.get("rating"),
-            created_at=doc.get("created_at").isoformat(),
-        )
+    return Pet(
+        id=str(doc.get("_id")),
+        user_id=doc.get("user_id"),
+        name=doc.get("name"),
+        type=doc.get("type"),
+        updated_at=updated_at,
+        created_at=doc.get("created_at").isoformat(),
+    )
 
 
 @router.post(

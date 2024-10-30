@@ -10,7 +10,7 @@ class Pet(BaseModel):
     name: str
     type: str
     created_at: datetime
-    update_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class PetCreate(BaseModel):
