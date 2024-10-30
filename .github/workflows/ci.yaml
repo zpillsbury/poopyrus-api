@@ -32,6 +32,15 @@ jobs:
 
   testing:
     runs-on: ubuntu-latest
+    env:
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      STATIC_TOKEN: ${{ secrets.STATIC_TOKEN }}
+      GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+      GOOGLE_AUTH_PK: ${{ secrets.GOOGLE_AUTH_PK}}
+      GOOGLE_AUTH_CLIENT_EMAIL: ${{ secrets.GOOGLE_AUTH_CLIENT_EMAIL }}
+      GOOGLE_AUTH_TOKEN_URI: ${{ secrets.GOOGLE_AUTH_TOKEN_URI }}
+      GOOGLE_AUTH_SIGN_IN_KEY: ${{ secrets.GOOGLE_AUTH_SIGN_IN_KEY }}
+
     steps:
       - name: 🏗 Setup Repo
         uses: actions/checkout@v4
