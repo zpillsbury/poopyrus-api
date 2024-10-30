@@ -132,11 +132,11 @@ async def add_log(
     response_model=LogSuccessResult,
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "description": "Invalid log id format.",
+            "description": "Invalid log id format",
             "model": GenericException,
         },
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "description": "Failed to delete log",
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Log not found",
             "model": GenericException,
         },
     },
@@ -160,8 +160,8 @@ async def delete_log(
     delete_result = await db.logs.delete_one({"_id": log_object_id, "user_id": user_id})
     if delete_result.deleted_count == 0:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete log.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Log not found",
         )
 
     return LogSuccessResult(success=True)
